@@ -22,7 +22,6 @@ has 'auth' => (
 has 'user_agent' => (
   is => 'rw',
   isa => 'LWP::UserAgent',
-  required => 0,
   default => method { LWP::UserAgent->new->(agent => 'WebService::Spotify/' . $VERSION) }
 );
 
@@ -47,11 +46,11 @@ method post ($method, :$payload, %args) {
 }
 
 method next ($result) {
-   return $self.get($result{next}) if $result{next};
+   return $self.get($result{next}) if $result->{next};
 }
 
 method previous ($result) {
-   return $self.get($result{previous}) if $result{previous};
+   return $self.get($result{previous}) if $result->{previous};
 }
 
 method track ($track) {
