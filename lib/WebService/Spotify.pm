@@ -22,7 +22,11 @@ has 'auth' => (
 has 'user_agent' => (
   is => 'rw',
   isa => 'LWP::UserAgent',
-  default => method { LWP::UserAgent->new->(agent => 'WebService::Spotify/' . $VERSION) }
+  default => sub { 
+    my $ua = LWP::UserAgent->new;
+    $ua->agent("WebService::Spotify/$VERSION");
+    return $ua;
+  }
 );
 
 method _auth_headers {
@@ -62,86 +66,86 @@ method post ($method, $payload, %args) {
 }
 
 method next ($result) {
-   return $self.get($result->{next}) if $result->{next};
+   return $self->get($result->{next}) if $result->{next};
 }
 
 method previous ($result) {
-   return $self.get($result->{previous}) if $result->{previous};
+   return $self->get($result->{previous}) if $result->{previous};
 }
 
 method track ($track) {
-  my $track_id = $self._get_id('track', $track);
-  return $self.get("tracks/$track_id");
+  my $track_id = $self->_get_id('track', $track);
+  return $self->get("tracks/$track_id");
 }
 
 method tracks ($tracks) {  
-  my @track_ids = map { $self._get_id('track', $_) } @$tracks;
-  return $self.get('tracks/?ids=' . join(',', @track_ids));
+  my @track_ids = map { $self->_get_id('track', $_) } @$tracks;
+  return $self->get('tracks/?ids=' . join(',', @track_ids));
 }
 
 method artist ($artist) {
-  my $artist_id = $self._get_id('artist', $artist);
-  return $self.get("artists/$artist_id");
+  my $artist_id = $self->_get_id('artist', $artist);
+  return $self->get("artists/$artist_id");
 }
 
 method artists ($artists) {  
-  my @artist_ids = map { $self._get_id('artist', $_) } @$artists;
-  return $self.get('artists/?ids=' . join(',', @artist_ids));
+  my @artist_ids = map { $self->_get_id('artist', $_) } @$artists;
+  return $self->get('artists/?ids=' . join(',', @artist_ids));
 }
 
 method artist_albums ($artist, :$album_type, :$country, :$limit = 20, :$offset = 0) {
-  my $artist_id = $self._get_id('artist', $artist);
-  return $self.get("artists/$artist_id/albums", album_type => $album_type, country => $country, limit => $limit, offset => $offset);
+  my $artist_id = $self->_get_id('artist', $artist);
+  return $self->get("artists/$artist_id/albums", album_type => $album_type, country => $country, limit => $limit, offset => $offset);
 }
 
 method artist_top_tracks ($artist, :$country = 'US') {
-  my $artist_id = $self._get_id('artist', $artist);
-  return $self.get("artists/$artist_id/top-tracks", country => $country);
+  my $artist_id = $self->_get_id('artist', $artist);
+  return $self->get("artists/$artist_id/top-tracks", country => $country);
 }
 
 method album ($album) {
-  my $album_id = $self._get_id('album', $album);
-  return $self.get("albums/$album_id");
+  my $album_id = $self->_get_id('album', $album);
+  return $self->get("albums/$album_id");
 }
 
 method album_tracks ($album) {
-  my $album_id = $self._get_id('album', $album);
-  return $self.get("albums/$album_id/tracks");
+  my $album_id = $self->_get_id('album', $album);
+  return $self->get("albums/$album_id/tracks");
 }
 
 method albums ($albums) {
-  my @album_ids = map { $self._get_id('album', $_) } @$albums;
-  return $self.get('albums/?ids=' . join(',', @album_ids));
+  my @album_ids = map { $self->_get_id('album', $_) } @$albums;
+  return $self->get('albums/?ids=' . join(',', @album_ids));
 }
 
 method search ($q, :$limit = 10, :$offset = 0, :$type = 'track') {
-  return $self.get('search', q => $q, limit => $limit, offset => $offset, type => $type);
+  return $self->get('search', q => $q, limit => $limit, offset => $offset, type => $type);
 }
 
 method user ($q, $user_id) {
-  return $self.get("users/$user_id");
+  return $self->get("users/$user_id");
 }
 
 method user_playlists($user_id) {
-  return $self.get("users/$user_id/playlists");
+  return $self->get("users/$user_id/playlists");
 }
 
 method user_playlist($user_id, :$playlist_id, :$fields) {
   my $method = $playlist_id ? "playlists/$playlist_id" : "starred";
-  return $self.get("users/$user_id/$method", $fields => $fields);
+  return $self->get("users/$user_id/$method", $fields => $fields);
 }
 
 method user_playlist_create($user_id, $name, :$public = 1) {
   my $data = { 'name' => $name, 'public' => $public };
-  return $self.post("users/$user_id/playlists", $data);
+  return $self->post("users/$user_id/playlists", $data);
 }
 
 method user_playlist_add_tracks($user_id, $playlist_id, $tracks, :$position) {
-  return $self.post("users/$user_id/playlists/$playlist_id/tracks", $tracks, $position => $position);
+  return $self->post("users/$user_id/playlists/$playlist_id/tracks", $tracks, $position => $position);
 }
 
 method me ($user_id, $playlist_id, $tracks, :$position) {
-  return $self.get('me/');
+  return $self->get('me/');
 }
 
 method _get_id ($type, $id) {
