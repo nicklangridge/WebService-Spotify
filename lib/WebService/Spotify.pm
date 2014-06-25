@@ -25,32 +25,48 @@ has 'user_agent' => (
   default => method { LWP::UserAgent->new->(agent => 'WebService::Spotify/' . $VERSION) }
 );
 
-method get ($method, %args) {
-  my $url = $method =~ /^http/ ? $method : $self->prefix . $method;
+method _auth_headers {
+  return $self->auth ? { 'Authorization' =>  'Bearer ' . $self->auth } : undef;
+}
 
-  my $uri = URI->new( $url );
+method _uri($method, %args) {
+  my $base_uri = $method =~ /^http/ ? $method : $self->prefix . $method;
+
+  my $uri = URI->new( $base_uri );
   $uri->query_param( $_, $args{$_} ) for keys %args;
 
-  my $response = $self->user_agent->get( $uri->as_string );
+  return $uri;
+}
+
+method get ($method, %args) {
+  my $uri      = $self->_uri( $method, %args );
+  my $headers  = $self->_auth_headers;
+  my $response = $self->user_agent->get( $uri->as_string, %$headers );
   my $data     = from_json( $response->content );
+
+  ## TODO: exception handing
 
   return $data;
 }
 
-method post ($method, :$payload, %args) {
-  my $url = $method =~ /^http/ ? $method : $self->prefix . $method;
+method post ($method, $payload, %args) {
+  my $uri      = $self->_uri( $method, %args );
+  my $headers  = $self->_auth_headers;
+  $headers->{'Content-Type'} = 'application/json';
+  my $response = $self->user_agent->post( $uri->as_string, %$headers, Content => to_json($payload) );
+  my $data     = from_json( $response->content );
 
-  ## do the post...
-
+  ## TODO: exception handing
+  
   return $data;
 }
 
 method next ($result) {
-   return $self.get($result{next}) if $result->{next};
+   return $self.get($result->{next}) if $result->{next};
 }
 
 method previous ($result) {
-   return $self.get($result{previous}) if $result->{previous};
+   return $self.get($result->{previous}) if $result->{previous};
 }
 
 method track ($track) {
@@ -58,8 +74,8 @@ method track ($track) {
   return $self.get("tracks/$track_id");
 }
 
-method tracks (@tracks) {  
-  my @track_ids = map { $self._get_id('track', $_) } @tracks;
+method tracks ($tracks) {  
+  my @track_ids = map { $self._get_id('track', $_) } @$tracks;
   return $self.get('tracks/?ids=' . join(',', @track_ids));
 }
 
@@ -69,18 +85,18 @@ method artist ($artist) {
 }
 
 method artists ($artists) {  
-  my @artist_ids = map { $self._get_id('artist', $_) } @artists;
+  my @artist_ids = map { $self._get_id('artist', $_) } @$artists;
   return $self.get('artists/?ids=' . join(',', @artist_ids));
 }
 
 method artist_albums ($artist, :$album_type, :$country, :$limit = 20, :$offset = 0) {
   my $artist_id = $self._get_id('artist', $artist);
-  return self.get("artists/$artist_id/albums", album_type => $album_type, country => $country, limit => $limit, offset => $offset);
+  return $self.get("artists/$artist_id/albums", album_type => $album_type, country => $country, limit => $limit, offset => $offset);
 }
 
 method artist_top_tracks ($artist, :$country = 'US') {
   my $artist_id = $self._get_id('artist', $artist);
-  return self.get("artists/$artist_id/top-tracks", country => $country);
+  return $self.get("artists/$artist_id/top-tracks", country => $country);
 }
 
 method album ($album) {
@@ -94,16 +110,16 @@ method album_tracks ($album) {
 }
 
 method albums ($albums) {
-  my @album_ids = map { $self._get_id('album', $_) } @albums;
+  my @album_ids = map { $self._get_id('album', $_) } @$albums;
   return $self.get('albums/?ids=' . join(',', @album_ids));
 }
 
 method search ($q, :$limit = 10, :$offset = 0, :$type = 'track') {
-  return self.get('search', q => $q, limit => $limit, offset => $offset, type => $type);
+  return $self.get('search', q => $q, limit => $limit, offset => $offset, type => $type);
 }
 
 method user ($q, $user_id) {
-  return self.get("users/$user_id");
+  return $self.get("users/$user_id");
 }
 
 method user_playlists($user_id) {
@@ -117,21 +133,18 @@ method user_playlist($user_id, :$playlist_id, :$fields) {
 
 method user_playlist_create($user_id, $name, :$public = 1) {
   my $data = { 'name' => $name, 'public' => $public };
-  return $self.post("users/$user_id/playlists", payload => $data);
+  return $self.post("users/$user_id/playlists", $data);
 }
 
 method user_playlist_add_tracks($user_id, $playlist_id, $tracks, :$position) {
-  my $data = { 'name' => $name, 'public' => $public };
-  return $self.post("users/$user_id/playlists/$playlist_id/tracks", payload => $tracks, $position => $position);
+  return $self.post("users/$user_id/playlists/$playlist_id/tracks", $tracks, $position => $position);
 }
 
 method me ($user_id, $playlist_id, $tracks, :$position) {
   return $self.get('me/');
 }
 
-method _get_id {
-  my ($self, $type, $id) = @_;
-
+method _get_id ($type, $id) {
   my @fields = split /:/, $id;
   if (@fields == 3) {
     warn "expected id of type $type but found type $fields[2] id" if $type ne $fields[1];
