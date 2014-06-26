@@ -22,19 +22,62 @@ my $spotify = new_ok 'WebService::Spotify';
 }
 {
   my $result = $spotify->artists([ $weezer_urn, $radiohead_urn ]);
+  isa_ok $result->{artists}, 'ARRAY';
   is @{$result->{artists}}, 2, 'got 2 artists';
 }
+
+
 {
   my $result = $spotify->album($pinkerton_urn);
   is $result->{name}, 'Pinkerton', 'got album Pinkerton';
 }
 {
   my $result = $spotify->album_tracks($pinkerton_urn);
+  isa_ok $result->{items}, 'ARRAY';
   is @{$result->{items}}, 10, 'got 10 Pinkerton tracks';
 }
 {
   my $result = $spotify->albums([ $pinkerton_urn, $pablo_honey_urn ]);
+  isa_ok $result->{albums}, 'ARRAY';
   is @{$result->{albums}}, 2, 'got 2 albums';
+}
+
+
+{
+  my $result = $spotify->track($creep_urn);
+  is $result->{name}, 'Creep', 'got track Creep by URN';
+}
+{
+  my $result = $spotify->track($creep_id);
+  is $result->{name}, 'Creep', 'got track Creep by ID';
+}
+{
+  my $result = $spotify->track($creep_url);
+  is $result->{name}, 'Creep', 'got track Creep by URL';
+}
+{
+  my $result = $spotify->tracks([$creep_url, $el_scorcho_urn]);
+  isa_ok $result->{tracks}, 'ARRAY';
+  is @{$result->{tracks}}, 2, 'got 2 tracks';
+}
+
+
+{
+  my $result = $spotify->artist_top_tracks($weezer_urn);
+  isa_ok $result->{tracks}, 'ARRAY';
+  is @{$result->{tracks}}, 10, 'got 10 top tracks';
+}
+{
+  my $result = $spotify->search('weezer', type => 'artist');
+  isa_ok $result->{artists}, 'HASH';
+  isa_ok $result->{artists}->{items}, 'ARRAY';
+  ok @{$result->{artists}->{items}} > 0, 'found some artists';
+}
+{
+  my $result = $spotify->artist_albums($weezer_urn);
+  isa_ok $result->{items}, 'ARRAY';
+  ok @{$result->{items}} > 0, 'got some Weezer albums';
+  ok grep {$_->{name} eq 'Hurley'} @{$result->{items}}, 'got album Hurley';
 }
 
 done_testing();
