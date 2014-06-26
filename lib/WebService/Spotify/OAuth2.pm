@@ -6,6 +6,7 @@ use IO::File;
 use LWP::UserAgent;
 use URI::QueryParam;
 use JSON;
+use MIME::Base64;
 
 our $VERSION = '0.001';
 
@@ -39,30 +40,30 @@ has 'user_agent' => (
 );
 
 method get_cached_token {
-  my $token;
+  my $token_info;
   if ($self->cache_path) {
     
     if (my $fh = IO::File->new('< ' . $self->cache_path)) {
-      $token = from_json( $fh->read_lines );
+      $token_info = from_json( $fh->read_lines );
       $fh->close;
     }
 
-    $token = $self->refresh_access_token($token->{refresh_token}) if $self->is_token_expired($token);
+    $token_info = $self->refresh_access_token($token_info->{refresh_token}) if $self->is_token_expired($token_info);
   }
-  return $token;
+  return $token_info;
 }
 
-method save_token_info ($token) {
+method save_token_info ($token_info) {
   if ($self->cache_path) {
     my $fh = IO::File->new('> ' . $self->cache_path) || die "Could not create cache file $@";
-    print $fh to_json($token);
+    print $fh to_json($token_info);
     $fh->close;
   }
 }
 
-method is_token_expired ($token) {
+method is_token_expired ($token_info) {
   my $now = time;
-  return $token->{expires_at} < $now;
+  return $token_info->{expires_at} < $now;
 }
 
 method get_authorize_url {
@@ -87,7 +88,7 @@ method parse_response_code ($response) {
 method get_access_token ($code) {
   my %payload = (
     grant_type    => 'authorization_code',
-    code          => 'code',
+    code          => $code,
     redirect_uri  => $self->redirect_uri
   );
   $payload{scope} = $self->scope if $self->scope;
@@ -96,33 +97,36 @@ method get_access_token ($code) {
   my $uri = URI->new( $self->oauth_token_url );
   $uri->query_param( $_, $payload{$_} ) for keys %payload;
 
-  my $auth_header = ###base64.b64encode### ( $self>client_id . ':' . $self->client_secret );
-  my %headers     = {'Authorization' => 'Basic ' . $auth_header};
+  my $auth_header = encode_base64( $self>client_id . ':' . $self->client_secret );
+  my %headers     = ( 'Authorization' => 'Basic ' . $auth_header );
+  my $response    = $self->user_agent->post( $uri->as_string, %headers, Content => \%payload );
 
-  #....
+  die $response->status_line if $response->status_code != 200;
+  
+  my $token_info = from_json( $response->content );
+  $self->save_token_info($token_info);
 
+  return $token_info;
 }
 
+method refresh_access_token ($refresh_token) {
+  my %payload = (
+    grant_type    => 'refresh_token',
+    refresh_token => $refresh_token
+  );
 
-# def get_access_token(self, code):
-#         payload = {'redirect_uri': self.redirect_uri,
-#                    'code': code,
-#                    'grant_type': 'authorization_code'}
-#         if self.scope:
-#             payload['scope'] = self.scope
-#         if self.state:
-#             payload['state'] = self.state
+  my $auth_header = encode_base64( $self>client_id . ':' . $self->client_secret );
+  my %headers     = ( 'Authorization' => 'Basic ' . $auth_header );
+  my $response    = $self->user_agent->post( $uri->as_string, %headers, Content => \%payload );
 
-#         auth_header = base64.b64encode(self.client_id + ':' + self.client_secret)
-#         headers = {'Authorization': 'Basic %s' % auth_header}
+  die $response->status_line if $response->status_code != 200;
 
+  my $token_info = from_json( $response->content );
+  $token_info{expires_at} = time + $token_info{expires_in};
+  $token_info{refresh_token} ||= $refresh_token;
+  $self->save_token_info($token_info);
 
-#         response = requests.post(self.OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
-#         if response.status_code is not 200:
-#             raise SpotifyOauthError(response.reason)
-#         token_info = response.json()
-#         token_info['expires_at'] = int(time.time()) + token_info['expires_in']
-#         self.save_token_info(token_info)
-#         return token_info
+  return $token_info;
+}
 
 1;

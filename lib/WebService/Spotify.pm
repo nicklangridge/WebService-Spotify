@@ -47,7 +47,9 @@ method get ($method, %args) {
   my $headers  = $self->_auth_headers;
   my $response = $self->user_agent->get( $uri->as_string, %$headers );
   
-  #die $response->status_line if !$response->is_success;
+  if (!$response->is_success and $response->status_code > 200 and $response->status_code < 300) {
+    die $response->status_line;
+  }
 
   return from_json( $response->content );
 }
