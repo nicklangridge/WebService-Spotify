@@ -46,11 +46,10 @@ method get ($method, %args) {
   my $uri      = $self->_uri( $method, %args );
   my $headers  = $self->_auth_headers;
   my $response = $self->user_agent->get( $uri->as_string, %$headers );
-  my $data     = from_json( $response->content );
+  
+  #die $response->status_line if !$response->is_success;
 
-  ## TODO: exception handing
-
-  return $data;
+  return from_json( $response->content );
 }
 
 method post ($method, $payload, %args) {
@@ -58,11 +57,12 @@ method post ($method, $payload, %args) {
   my $headers  = $self->_auth_headers;
   $headers->{'Content-Type'} = 'application/json';
   my $response = $self->user_agent->post( $uri->as_string, %$headers, Content => to_json($payload) );
-  my $data     = from_json( $response->content );
-
-  ## TODO: exception handing
   
-  return $data;
+  if (!$response->is_success and $response->status_code > 200 and $response->status_code < 300) {
+    die $response->status_line;
+  }
+
+  return from_json( $response->content );
 }
 
 method next ($result) {
@@ -125,7 +125,7 @@ method search ($q, :$limit = 10, :$offset = 0, :$type = 'track') {
   return $self->get('search', q => $q, limit => $limit, offset => $offset, type => $type);
 }
 
-method user ($q, $user_id) {
+method user ($user_id) {
   return $self->get("users/$user_id");
 }
 
@@ -147,7 +147,7 @@ method user_playlist_add_tracks($user_id, $playlist_id, $tracks, :$position) {
   return $self->post("users/$user_id/playlists/$playlist_id/tracks", $tracks, $position => $position);
 }
 
-method me ($user_id, $playlist_id, $tracks, :$position) {
+method me {
   return $self->get('me/');
 }
 
