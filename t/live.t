@@ -77,7 +77,7 @@ my $spotify = new_ok 'WebService::Spotify';
   my $result = $spotify->artist_albums($weezer_urn);
   isa_ok $result->{items}, 'ARRAY';
   ok @{$result->{items}} > 0, 'got some Weezer albums';
-  ok grep {$_->{name} eq 'Hurley'} @{$result->{items}}, 'got album Hurley';
+  ok((grep {$_->{name} eq 'Hurley'} @{$result->{items}}), 'got album Hurley');
 }
 
 done_testing();

@@ -93,9 +93,12 @@ method artists ($artists) {
   return $self->get('artists/?ids=' . join(',', @artist_ids));
 }
 
-method artist_albums ($artist, :$album_type, :$country = 'US', :$limit = 20, :$offset = 0) {
+method artist_albums ($artist, :$album_type, :$country, :$limit = 20, :$offset = 0) {
   my $artist_id = $self->_get_id('artist', $artist);
-  return $self->get("artists/$artist_id/albums", album_type => $album_type, country => $country, limit => $limit, offset => $offset);
+  my %options;
+  $options{album_type} = $album_type if $album_type;
+  $options{country}    = $country    if $country;
+  return $self->get("artists/$artist_id/albums", %options, limit => $limit, offset => $offset);
 }
 
 method artist_top_tracks ($artist, :$country = 'US') {
