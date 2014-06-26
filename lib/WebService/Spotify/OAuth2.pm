@@ -96,32 +96,33 @@ method get_access_token ($code) {
   my $uri = URI->new( $self->oauth_token_url );
   $uri->query_param( $_, $payload{$_} ) for keys %payload;
 
-  my $auth_header = base64.b64encode( $self>client_id . ':' . $self->client_secret );
+  my $auth_header = ###base64.b64encode### ( $self>client_id . ':' . $self->client_secret );
   my %headers     = {'Authorization' => 'Basic ' . $auth_header};
 
-  return $uri->as_string;
+  #....
+
 }
 
 
-def get_access_token(self, code):
-        payload = {'redirect_uri': self.redirect_uri,
-                   'code': code,
-                   'grant_type': 'authorization_code'}
-        if self.scope:
-            payload['scope'] = self.scope
-        if self.state:
-            payload['state'] = self.state
+# def get_access_token(self, code):
+#         payload = {'redirect_uri': self.redirect_uri,
+#                    'code': code,
+#                    'grant_type': 'authorization_code'}
+#         if self.scope:
+#             payload['scope'] = self.scope
+#         if self.state:
+#             payload['state'] = self.state
 
-        auth_header = base64.b64encode(self.client_id + ':' + self.client_secret)
-        headers = {'Authorization': 'Basic %s' % auth_header}
+#         auth_header = base64.b64encode(self.client_id + ':' + self.client_secret)
+#         headers = {'Authorization': 'Basic %s' % auth_header}
 
 
-        response = requests.post(self.OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
-        if response.status_code is not 200:
-            raise SpotifyOauthError(response.reason)
-        token_info = response.json()
-        token_info['expires_at'] = int(time.time()) + token_info['expires_in']
-        self.save_token_info(token_info)
-        return token_info
+#         response = requests.post(self.OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
+#         if response.status_code is not 200:
+#             raise SpotifyOauthError(response.reason)
+#         token_info = response.json()
+#         token_info['expires_at'] = int(time.time()) + token_info['expires_in']
+#         self.save_token_info(token_info)
+#         return token_info
 
 1;
