@@ -7,12 +7,13 @@ use LWP::UserAgent;
 use URI::QueryParam;
 use JSON;
 use MIME::Base64;
+use Data::Dumper;
 
 our $VERSION = '0.001';
 
 has 'client_id'     => ( is => 'rw', isa => 'Str', required => 1 );
 has 'client_secret' => ( is => 'rw', isa => 'Str', required => 1 );
-has 'redirect_uri'  => ( is => 'rw', isa => 'Str', required => 1 );
+has 'redirect_uri'  => ( is => 'rw', isa => 'Str' );
 has 'state'         => ( is => 'rw', isa => 'Str' );
 has 'scope'         => ( is => 'rw', isa => 'Str' );
 has 'cache_path'    => ( is => 'rw', isa => 'Str' );
@@ -44,7 +45,8 @@ method get_cached_token {
   if ($self->cache_path) {
     
     if (my $fh = IO::File->new('< ' . $self->cache_path)) {
-      $token_info = from_json( $fh->read_lines );
+      local $/;
+      $token_info = from_json( <$fh> );
       $fh->close;
     }
 
@@ -62,8 +64,7 @@ method save_token_info ($token_info) {
 }
 
 method is_token_expired ($token_info) {
-  my $now = time;
-  return $token_info->{expires_at} < $now;
+  return $token_info ? ($token_info->{expires_at} < time) : 0;
 }
 
 method get_authorize_url {
@@ -82,7 +83,7 @@ method get_authorize_url {
 }
 
 method parse_response_code ($response) {
-  return [split /&/, [split /?code=/, $response]->[1]]->[0];
+  return [split /&/, [split /\?code=/, $response]->[1]]->[0];
 }
 
 method get_access_token ($code) {
@@ -97,11 +98,11 @@ method get_access_token ($code) {
   my $uri = URI->new( $self->oauth_token_url );
   $uri->query_param( $_, $payload{$_} ) for keys %payload;
 
-  my $auth_header = encode_base64( $self>client_id . ':' . $self->client_secret );
+  my $auth_header = encode_base64( $self->client_id . ':' . $self->client_secret );
   my %headers     = ( 'Authorization' => 'Basic ' . $auth_header );
   my $response    = $self->user_agent->post( $uri->as_string, %headers, Content => \%payload );
 
-  die $response->status_line if $response->status_code != 200;
+  #die $response->status_line if $response->status_code != 200;
   
   my $token_info = from_json( $response->content );
   $self->save_token_info($token_info);
@@ -115,16 +116,21 @@ method refresh_access_token ($refresh_token) {
     refresh_token => $refresh_token
   );
 
-  my $auth_header = encode_base64( $self>client_id . ':' . $self->client_secret );
+  my $auth_header = encode_base64( $self->client_id . ':' . $self->client_secret );
   my %headers     = ( 'Authorization' => 'Basic ' . $auth_header );
-  my $response    = $self->user_agent->post( $uri->as_string, %headers, Content => \%payload );
+  my $response    = $self->user_agent->post( $self->oauth_token_url, %headers, Content => \%payload );
 
-  die $response->status_line if $response->status_code != 200;
+  #die $response->status_line if $response->status_code != 200;
 
   my $token_info = from_json( $response->content );
-  $token_info{expires_at} = time + $token_info{expires_in};
-  $token_info{refresh_token} ||= $refresh_token;
-  $self->save_token_info($token_info);
+  
+  warn Dumper $token_info;
+
+  if ($token_info) {
+    $token_info->{expires_at} = time + $token_info->{expires_in};
+    $token_info->{refresh_token} ||= $refresh_token;
+    $self->save_token_info($token_info);
+  }
 
   return $token_info;
 }

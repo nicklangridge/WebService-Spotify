@@ -5,19 +5,13 @@ use Method::Signatures;
 use LWP::UserAgent;
 use URI::QueryParam;
 use JSON;
+use Data::Dumper;
 
 our $VERSION = '0.001';
 
-has 'prefix' => (
-  is => 'rw',
-  isa => 'Str',
-  default => 'https://api.spotify.com/v1/'
-);
-
-has 'auth' => (
-  is => 'rw',
-  isa => 'Str',
-);
+has 'prefix' => ( is => 'rw', isa => 'Str', default => 'https://api.spotify.com/v1/' );
+has 'auth'   => ( is => 'rw', isa => 'Str' );
+has 'trace'  => ( is => 'rw', isa => 'Bool', default => 0 );
 
 has 'user_agent' => (
   is => 'rw',
@@ -29,29 +23,20 @@ has 'user_agent' => (
   }
 );
 
-method _auth_headers {
-  return $self->auth ? { 'Authorization' =>  'Bearer ' . $self->auth } : undef;
-}
-
-method _uri($method, %args) {
-  my $base_uri = $method =~ /^http/ ? $method : $self->prefix . $method;
-
-  my $uri = URI->new( $base_uri );
-  $uri->query_param( $_, $args{$_} ) for keys %args;
-
-  return $uri;
-}
-
 method get ($method, %args) {
   my $uri      = $self->_uri( $method, %args );
   my $headers  = $self->_auth_headers;
   my $response = $self->user_agent->get( $uri->as_string, %$headers );
   
+  $self->_log("GET", $uri->as_string);
+
   if (!$response->is_success and $response->status_code > 200 and $response->status_code < 300) {
     die $response->status_line;
   }
 
-  return from_json( $response->content );
+  $self->_log("RESP", $response->content);
+
+  return from_json($response->content);
 }
 
 method post ($method, $payload, %args) {
@@ -60,11 +45,16 @@ method post ($method, $payload, %args) {
   $headers->{'Content-Type'} = 'application/json';
   my $response = $self->user_agent->post( $uri->as_string, %$headers, Content => to_json($payload) );
   
+  $self->_log("POST", $uri->as_string);
+  $self->_log("DATA", Dumper $payload);
+
   if (!$response->is_success and $response->status_code > 200 and $response->status_code < 300) {
     die $response->status_line;
   }
+  
+  $self->_log("RESP", $response->content);
 
-  return from_json( $response->content );
+  return from_json($response->content);
 }
 
 method next ($result) {
@@ -151,6 +141,23 @@ method user_playlist_add_tracks($user_id, $playlist_id, $tracks, :$position) {
 
 method me {
   return $self->get('me/');
+}
+
+method _log (@strings) {
+  print join(' ', @strings) . "\n" if $self->trace;
+}
+
+method _auth_headers {
+  return $self->auth ? { 'Authorization' =>  'Bearer ' . $self->auth } : undef;
+}
+
+method _uri($method, %args) {
+  my $base_uri = $method =~ /^http/ ? $method : $self->prefix . $method;
+
+  my $uri = URI->new( $base_uri );
+  $uri->query_param( $_, $args{$_} ) for keys %args;
+
+  return $uri;
 }
 
 method _get_id ($type, $id) {
