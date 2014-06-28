@@ -47,13 +47,12 @@ method post ($method, $payload, %args) {
   
   $self->_log("POST", $uri->as_string);
   $self->_log("DATA", Dumper $payload);
-
+  $self->_log("RESP", $response->content);
+  
   if (!$response->is_success and $response->status_code > 200 and $response->status_code < 300) {
     die $response->status_line;
   }
   
-  $self->_log("RESP", $response->content);
-
   return from_json($response->content);
 }
 

@@ -13,6 +13,8 @@ if (!$username) {
 
 my $token = Util::prompt_for_user_token($username);
 
+warn "token: " . Dumper($token);
+
 if ($token) {
   my $sp = WebService::Spotify->new(auth => $token, trace => 1);
   my $playlists = $sp->user_playlists($username);
