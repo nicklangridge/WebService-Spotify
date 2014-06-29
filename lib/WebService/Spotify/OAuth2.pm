@@ -18,15 +18,8 @@ has 'scope'         => ( is => 'rw' );
 has 'cache_path'    => ( is => 'rw' );
 has 'trace'         => ( is => 'rw', default => 0 );
 
-has 'oauth_authorize_url' => (
-  is => 'rw',
-  default => 'https://accounts.spotify.com/authorize'
-);
-
-has 'oauth_token_url' => (
-  is => 'rw',
-  default => 'https://accounts.spotify.com/api/token'
-);
+has 'oauth_authorize_url' => ( is => 'rw', default => 'https://accounts.spotify.com/authorize' );
+has 'oauth_token_url'     => ( is => 'rw', default => 'https://accounts.spotify.com/api/token' );
 
 has 'user_agent' => (
   is => 'rw',
@@ -94,17 +87,8 @@ method get_access_token ($code) {
   $payload->{scope} = $self->scope if $self->scope;
   $payload->{state} = $self->state if $self->state;
  
-  my $headers  = $self->_auth_headers;
-  my $response = $self->user_agent->post( $self->oauth_token_url, $payload, %$headers );
+  my $token_info = $self->_post( $self->oauth_authorize_url, $payload );
 
-  $self->_log("POST", $self->oauth_token_url);
-  $self->_log("HEAD", Dumper $headers);
-  $self->_log("DATA", Dumper $payload);
-  $self->_log("RESP", $response->content);
-
-  #die $response->status_line if $response->status_code != 200;
-  
-  my $token_info = from_json( $response->content );
   if ($token_info) {
     die("Token error: $token_info->{error}" . ($token_info->{error_description} ? " ($token_info->{error_description})" : '') ) if $token_info->{error};
     $self->save_token_info($token_info);
@@ -118,17 +102,8 @@ method refresh_access_token ($refresh_token) {
     grant_type    => 'refresh_token',
     refresh_token => $refresh_token
   };
-  my $headers  = $self->_auth_headers;
-  my $response = $self->user_agent->post( $self->oauth_token_url, $payload, %$headers );
 
-  $self->_log("POST", $self->oauth_token_url);
-  $self->_log("HEAD", Dumper $headers);
-  $self->_log("DATA", Dumper $payload);
-  $self->_log("RESP", $response->content);
-
-  #die $response->status_line if $response->status_code != 200;
-
-  my $token_info = from_json( $response->content );
+  my $token_info = $self->_post( $self->oauth_token_url, $payload );
 
   if ($token_info) {
     die("Token error: $token_info->{error}" . ($token_info->{error_description} ? " ($token_info->{error_description})" : '') ) if $token_info->{error};
@@ -138,6 +113,24 @@ method refresh_access_token ($refresh_token) {
   }
 
   return $token_info;
+}
+
+method _post ($uri, $payload) {
+  my $headers  = $self->_auth_headers;
+
+  $self->_log("POST", $uri);
+  $self->_log("HEAD", Dumper $headers);
+  $self->_log("DATA", Dumper $payload);
+  
+  my $response = $self->user_agent->post( $uri, $payload, %$headers );
+
+  $self->_log("RESP", $response->content);
+
+  if (!$response->is_success and $response->status_code != 200) {
+    die $response->status_line;
+  }
+
+  return from_json( $response->content );
 }
 
 method _auth_headers {
