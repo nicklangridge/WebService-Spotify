@@ -11,9 +11,6 @@ WebService::Spotify - A simple interface to the  L<Spotify Web API|https://devel
 
 More examples can be found in the /examples directory.
 
-
-=head1 DESCRIPTION
-
 =head1 METHODS
 
 See L<Method::Signatures> for details of the parameter spec used below. 
@@ -28,75 +25,75 @@ Methods that take item IDs (such as the track, album and artist methods) accept 
 
 The following methods are supported:
 
-=head2 album ($album_id)
+=head4 album ($album_id)
 
 returns a single album given the album's ID, URN or URL
 
-=head2 album_tracks ($album_id)
+=head4 album_tracks ($album_id)
 
 Get Spotify catalog information about an album’s tracks
 
-=head2 albums (\@albums)
+=head4 albums (\@albums)
 
 returns a list of albums given the album IDs, URNs, or URLs
 
-=head2 artist ($artist_id)
+=head4 artist ($artist_id)
 
 returns a single artist given the artist's ID, URN or URL
 
-=head2 artist_albums ($artist, :$album_type, :$country, :$limit = 20, :$offset = 0)
+=head4 artist_albums ($artist, :$album_type, :$country, :$limit = 20, :$offset = 0)
 
 Get Spotify catalog information about an artist’s albums
 
-=head2 artist_top_tracks ($artist, :$country = 'US')
+=head4 artist_top_tracks ($artist, :$country = 'US')
 
 Get Spotify catalog information about an artist’s top 10 tracks by country.
 
-=head2 artists (\@artists)
+=head4 artists (\@artists)
 
 returns a list of artists given the artist IDs, URNs, or URLs
 
-=head2 me()
+=head4 me()
 
 returns info about me
 
-=head2 next ($result)
+=head4 next ($result)
 
 returns the next result given a result
 
-=head2 previous ($result)
+=head4 previous ($result)
 
 returns the previous result given a result
 
-=head2 search ($q, limit => 10, offset => 0, type => 'track')
+=head4 search ($q, limit => 10, offset => 0, type => 'track')
 
 searches for an item
 
-=head2 track ($track_id)
+=head4 track ($track_id)
 
 returns a single track given the track's ID, URN or URL
 
-=head2 tracks (\@track_ids)
+=head4 tracks (\@track_ids)
 
 returns a list of tracks given the track IDs, URNs, or URLs
 
-=head2 user ($user_id)
+=head4 user ($user_id)
 
 Gets basic profile information about a Spotify User
 
-=head2 user_playlist ($user_id, :$playlist_id, :$fields)
+=head4 user_playlist ($user_id, :$playlist_id, :$fields)
 
 Gets playlist of a user
 
-=head2 user_playlist_add_tracks ($user_id, $playlist_id, $tracks, :$position)
+=head4 user_playlist_add_tracks ($user_id, $playlist_id, $tracks, :$position)
 
 Adds tracks to a playlist
 
-=head2 user_playlist_create ($user_id, $name, :$public = 1)
+=head4 user_playlist_create ($user_id, $name, :$public = 1)
 
 Creates a playlist for a user
 
-=head2 user_playlists ($user_id)
+=head4 user_playlists ($user_id)
 
 Gets playlists of a user
 
