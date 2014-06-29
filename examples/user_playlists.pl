@@ -1,20 +1,19 @@
 use strict;
 use warnings;
-use Data::Dumper;
 use WebService::Spotify;
-use Util;
+use WebService::Spotify::Util;
 
 my $username = $ARGV[0];
 
-if (!$username) {
-  print 'usage: perl user_playlists.pl <username>';
+unless ($username) {
+  print "Usage: $0 username";
   exit;
 }
 
-my $token = Util::prompt_for_user_token($username);
+my $token = WebService::Spotify::Util::prompt_for_user_token($username);
 
 if ($token) {
-  my $sp = WebService::Spotify->new(auth => $token, trace => 0);
+  my $sp = WebService::Spotify->new(auth => $token);
   my $playlists = $sp->user_playlists($username);
   print "$_->{name}\n" for @{ $playlists->{items} };
 } else {

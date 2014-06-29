@@ -54,7 +54,7 @@ method save_token_info ($token_info) {
 }
 
 method is_token_expired ($token_info) {
-  return $token_info ? ($token_info->{expires_at} < time) : 0;
+  return $token_info and $token_info->{expires_at} ? ($token_info->{expires_at} < time) : 0;
 }
 
 method get_authorize_url {
@@ -87,7 +87,7 @@ method get_access_token ($code) {
   $payload->{scope} = $self->scope if $self->scope;
   $payload->{state} = $self->state if $self->state;
  
-  my $token_info = $self->_post( $self->oauth_authorize_url, $payload );
+  my $token_info = $self->_post( $self->oauth_token_url, $payload );
 
   if ($token_info) {
     die("Token error: $token_info->{error}" . ($token_info->{error_description} ? " ($token_info->{error_description})" : '') ) if $token_info->{error};
@@ -117,19 +117,15 @@ method refresh_access_token ($refresh_token) {
 
 method _post ($uri, $payload) {
   my $headers  = $self->_auth_headers;
-
+  my $response = $self->user_agent->post( $uri, $payload, %$headers );
+  
   $self->_log("POST", $uri);
   $self->_log("HEAD", Dumper $headers);
   $self->_log("DATA", Dumper $payload);
-  
-  my $response = $self->user_agent->post( $uri, $payload, %$headers );
-
   $self->_log("RESP", $response->content);
 
-  if (!$response->is_success and $response->status_code != 200) {
-    die $response->status_line;
-  }
-
+  #die $response->status_line unless $response->is_success;
+  
   return from_json( $response->content );
 }
 

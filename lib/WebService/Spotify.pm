@@ -27,14 +27,9 @@ method get ($method, %args) {
   my $response = $self->user_agent->get( $uri->as_string, %$headers );
   
   $self->_log("GET", $uri->as_string);
-
-  if (!$response->is_success and $response->status_code > 200 and $response->status_code < 300) {
-    die $response->status_line;
-  }
-
   $self->_log("RESP", $response->content);
 
-  return from_json($response->content);
+  return $response->content ? from_json($response->content) : undef;
 }
 
 method post ($method, $payload, %args) {
@@ -44,14 +39,11 @@ method post ($method, $payload, %args) {
   my $response = $self->user_agent->post( $uri->as_string, %$headers, Content => to_json($payload) );
   
   $self->_log("POST", $uri->as_string);
+  $self->_log("HEAD", Dumper $headers);
   $self->_log("DATA", Dumper $payload);
   $self->_log("RESP", $response->content);
 
-  if (!$response->is_success and $response->status_code > 200 and $response->status_code < 300) {
-    die $response->status_line;
-  }
-  
-  return from_json($response->content);
+  return $response->content ? from_json($response->content) : undef;
 }
 
 method next ($result) {
@@ -133,7 +125,9 @@ method user_playlist_create($user_id, $name, :$public = 1) {
 }
 
 method user_playlist_add_tracks($user_id, $playlist_id, $tracks, :$position) {
-  return $self->post("users/$user_id/playlists/$playlist_id/tracks", $tracks, $position => $position);
+  my %options;
+  $options{position} = $position if $position;
+  return $self->post("users/$user_id/playlists/$playlist_id/tracks", $tracks, %options);
 }
 
 method me {
