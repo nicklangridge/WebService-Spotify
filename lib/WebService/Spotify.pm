@@ -110,21 +110,21 @@ method user ($user_id) {
   return $self->get("users/$user_id");
 }
 
-method user_playlists($user_id) {
+method user_playlists ($user_id) {
   return $self->get("users/$user_id/playlists");
 }
 
-method user_playlist($user_id, :$playlist_id, :$fields) {
+method user_playlist ($user_id, :$playlist_id, :$fields) {
   my $method = $playlist_id ? "playlists/$playlist_id" : "starred";
   return $self->get("users/$user_id/$method", $fields => $fields);
 }
 
-method user_playlist_create($user_id, $name, :$public = 1) {
+method user_playlist_create ($user_id, $name, :$public = 1) {
   my $data = { 'name' => $name, 'public' => $public };
   return $self->post("users/$user_id/playlists", $data);
 }
 
-method user_playlist_add_tracks($user_id, $playlist_id, $tracks, :$position) {
+method user_playlist_add_tracks ($user_id, $playlist_id, $tracks, :$position) {
   my %options;
   $options{position} = $position if $position;
   return $self->post("users/$user_id/playlists/$playlist_id/tracks", $tracks, %options);
@@ -142,7 +142,7 @@ method _auth_headers {
   return $self->auth ? { 'Authorization' =>  'Bearer ' . $self->auth } : undef;
 }
 
-method _uri($method, %args) {
+method _uri ($method, %args) {
   my $base_uri = $method =~ /^http/ ? $method : $self->prefix . $method;
 
   my $uri = URI->new( $base_uri );
@@ -167,5 +167,127 @@ method _get_id ($type, $id) {
   return $id;
 }
 
-1;
+1; 
+
+=head1 NAME
+
+WebService::Spotify - A simple interface to the  L<Spotify Web API|https://developer.spotify.com/web-api/>
+
+=head1 SYNOPSIS
+
+  my $spotify = WebService::Spotify->new;
+  my $results = $spotify->search('weezer', limit => 20);
+  say $_->{name} for @{$results->{tracks}->{items}};
+  
+
+More examples can be found in the /examples directory.
+
+
+=head1 DESCRIPTION
+
+=head1 METHODS
+
+See L<Method::Signatures> for details of the parameter spec used below. 
+
+Refer to the L<Spotify API documentation|https://developer.spotify.com/spotify-web-api/> for details on the methods and parameters.
+
+Methods that take item IDs (such as the track, album and artist methods) accept URN, URL or simple ID types. The following 3 ids are all acceptable IDs:
+
+ http://open.spotify.com/track/3HfB5hBU0dmBt8T0iCmH42
+ spotify:track:3HfB5hBU0dmBt8T0iCmH42
+ 3HfB5hBU0dmBt8T0iCmH42
+
+The following methods are supported:
+
+=head2 album ($album_id)
+
+returns a single album given the album's ID, URN or URL
+
+=head2 album_tracks ($album_id)
+
+Get Spotify catalog information about an album’s tracks
+
+=head2 albums (\@albums)
+
+returns a list of albums given the album IDs, URNs, or URLs
+
+=head2 artist ($artist_id)
+
+returns a single artist given the artist's ID, URN or URL
+
+=head2 artist_albums ($artist, :$album_type, :$country, :$limit = 20, :$offset = 0)
+
+Get Spotify catalog information about an artist’s albums
+
+=head2 artist_top_tracks ($artist, :$country = 'US')
+
+Get Spotify catalog information about an artist’s top 10 tracks by country.
+
+=head2 artists (\@artists)
+
+returns a list of artists given the artist IDs, URNs, or URLs
+
+=head2 me()
+
+returns info about me
+
+=head2 next ($result)
+
+returns the next result given a result
+
+=head2 previous ($result)
+
+returns the previous result given a result
+
+=head2 search ($q, limit => 10, offset => 0, type => 'track')
+
+searches for an item
+
+=head2 track ($track_id)
+
+returns a single track given the track's ID, URN or URL
+
+=head2 tracks (\@track_ids)
+
+returns a list of tracks given the track IDs, URNs, or URLs
+
+=head2 user ($user_id)
+
+Gets basic profile information about a Spotify User
+
+=head2 user_playlist ($user_id, :$playlist_id, :$fields)
+
+Gets playlist of a user
+
+=head2 user_playlist_add_tracks ($user_id, $playlist_id, $tracks, :$position)
+
+Adds tracks to a playlist
+
+=head2 user_playlist_create ($user_id, $name, :$public = 1)
+
+Creates a playlist for a user
+
+=head2 user_playlists ($user_id)
+
+Gets playlists of a user
+
+
+=head1 AUTHOR
+
+Nick Langridge <nickl@cpan.org>
+
+=head1 CREDITS
+
+This module was ported from L<Spotipy|https://github.com/plamere/spotipy>, a Python wrapper for the Spotify Web API
+
+=head1 LICENSE
+
+This module is free software; you can redistribute it or 
+modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+L<WebService::EchoNest> - wrapper for the EchoNest API which has some integration with the Spotify Web API
+
+L<Net::Spotify> - wrapper for the old Spotify metadata API
 
