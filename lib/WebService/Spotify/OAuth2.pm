@@ -1,6 +1,5 @@
 package WebService::Spotify::OAuth2;
-use Moose;
-use MooseX::StrictConstructor;
+use Moo;
 use Method::Signatures;
 use IO::File;
 use LWP::UserAgent;
@@ -11,29 +10,26 @@ use Data::Dumper;
 
 our $VERSION = '0.001';
 
-has 'client_id'     => ( is => 'rw', isa => 'Str', required => 1 );
-has 'client_secret' => ( is => 'rw', isa => 'Str', required => 1 );
-has 'redirect_uri'  => ( is => 'rw', isa => 'Str', required => 1 );
-has 'state'         => ( is => 'rw', isa => 'Str' );
-has 'scope'         => ( is => 'rw', isa => 'Str' );
-has 'cache_path'    => ( is => 'rw', isa => 'Str' );
-has 'trace'         => ( is => 'rw', isa => 'Bool', default => 0 );
+has 'client_id'     => ( is => 'rw', required => 1 );
+has 'client_secret' => ( is => 'rw', required => 1 );
+has 'redirect_uri'  => ( is => 'rw', required => 1 );
+has 'state'         => ( is => 'rw' );
+has 'scope'         => ( is => 'rw' );
+has 'cache_path'    => ( is => 'rw' );
+has 'trace'         => ( is => 'rw', default => 0 );
 
 has 'oauth_authorize_url' => (
   is => 'rw',
-  isa => 'Str',
   default => 'https://accounts.spotify.com/authorize'
 );
 
 has 'oauth_token_url' => (
   is => 'rw',
-  isa => 'Str',
   default => 'https://accounts.spotify.com/api/token'
 );
 
 has 'user_agent' => (
   is => 'rw',
-  isa => 'LWP::UserAgent',
   default => sub { 
     my $ua = LWP::UserAgent->new;
     $ua->agent("WebService::Spotify::OAuth2/$VERSION");

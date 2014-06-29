@@ -1,6 +1,5 @@
 package WebService::Spotify;
-use Moose;
-use MooseX::StrictConstructor;
+use Moo;
 use Method::Signatures;
 use LWP::UserAgent;
 use URI::QueryParam;
@@ -9,13 +8,12 @@ use Data::Dumper;
 
 our $VERSION = '0.001';
 
-has 'prefix' => ( is => 'rw', isa => 'Str', default => 'https://api.spotify.com/v1/' );
-has 'auth'   => ( is => 'rw', isa => 'Str' );
-has 'trace'  => ( is => 'rw', isa => 'Bool', default => 0 );
+has 'prefix' => ( is => 'rw', default => 'https://api.spotify.com/v1/' );
+has 'auth'   => ( is => 'rw' );
+has 'trace'  => ( is => 'rw', default => 0 );
 
 has 'user_agent' => (
   is => 'rw',
-  isa => 'LWP::UserAgent',
   default => sub { 
     my $ua = LWP::UserAgent->new;
     $ua->agent("WebService::Spotify/$VERSION");
@@ -48,7 +46,7 @@ method post ($method, $payload, %args) {
   $self->_log("POST", $uri->as_string);
   $self->_log("DATA", Dumper $payload);
   $self->_log("RESP", $response->content);
-  
+
   if (!$response->is_success and $response->status_code > 200 and $response->status_code < 300) {
     die $response->status_line;
   }
