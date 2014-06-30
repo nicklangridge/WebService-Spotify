@@ -180,7 +180,7 @@ WebService::Spotify - A simple interface to the  L<Spotify Web API|https://devel
   say $_->{name} for @{$results->{tracks}->{items}};
   
 
-More examples can be found in the /examples directory.
+More examples can be found in the /eg directory.
 
 
 =head1 DESCRIPTION
