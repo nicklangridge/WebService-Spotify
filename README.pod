@@ -1,6 +1,6 @@
 =head1 NAME
 
-WebService::Spotify - A simple interface to the  L<Spotify Web API|https://developer.spotify.com/web-api/>
+WebService::Spotify - A simple Perl interface to the  L<Spotify Web API|https://developer.spotify.com/web-api/>
 
 =head1 SYNOPSIS
 
