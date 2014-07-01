@@ -8,7 +8,7 @@ use JSON;
 use MIME::Base64;
 use Data::Dumper;
 
-our $VERSION = '1.000';
+our $VERSION = '1.001';
 
 has 'client_id'     => ( is => 'rw', required => 1 );
 has 'client_secret' => ( is => 'rw', required => 1 );
