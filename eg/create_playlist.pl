@@ -11,7 +11,7 @@ unless ($username and $playlist_name) {
   exit;
 }
 
-my $token = Util::prompt_for_user_token($username);
+my $token = WebService::Spotify::Util::prompt_for_user_token($username);
 
 if ($token) {
   my $sp = WebService::Spotify->new(auth => $token);

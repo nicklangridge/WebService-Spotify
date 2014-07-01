@@ -6,7 +6,7 @@ use URI::QueryParam;
 use JSON;
 use Data::Dumper;
 
-our $VERSION = '1.001';
+our $VERSION = '1.002';
 
 has 'prefix' => ( is => 'rw', default => 'https://api.spotify.com/v1/' );
 has 'auth'   => ( is => 'rw' );

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 use WebService::Spotify;
-use Util;
+use WebService::Spotify::Util;
 
 my ($username, $playlist_id, @track_ids) = @ARGV;
 
@@ -12,7 +12,7 @@ unless ($username and $playlist_id and @track_ids) {
 }
 
 my $scope = 'playlist-modify';
-my $token = Util::prompt_for_user_token($username, $scope);
+my $token = WebService::Spotify::Util::prompt_for_user_token($username, $scope);
 
 if ($token) {
   my $sp = WebService::Spotify->new(auth => $token, trace => 1);
