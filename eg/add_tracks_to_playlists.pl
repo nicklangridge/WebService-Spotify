@@ -11,7 +11,7 @@ unless ($username and $playlist_id and @track_ids) {
   exit;
 }
 
-my $scope = 'playlist-modify';
+my $scope = 'playlist-modify-public';
 my $token = WebService::Spotify::Util::prompt_for_user_token($username, $scope);
 
 if ($token) {
