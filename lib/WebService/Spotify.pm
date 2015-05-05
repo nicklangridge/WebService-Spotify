@@ -144,6 +144,10 @@ method user_playlist_add_tracks ($user_id, $playlist_id, $tracks, :$position) {
   return $self->post("users/$user_id/playlists/$playlist_id/tracks", $tracks, %options);
 }
 
+method user_playlist_replace_tracks ($user_id, $playlist_id, $tracks) {
+  return $self->put("users/$user_id/playlists/$playlist_id/tracks", { 'uris' => $tracks });
+}
+
 method me {
   return $self->get('me/');
 }
