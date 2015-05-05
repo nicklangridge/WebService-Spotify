@@ -46,6 +46,20 @@ method post ($method, $payload, %args) {
   return $response->content ? from_json($response->content) : undef;
 }
 
+method put ($method, $payload, %args) {
+  my $uri     = $self->_uri( $method, %args );
+  my $headers = $self->_auth_headers;
+  $headers->{'Content-Type'} = 'application/json';
+  my $response = $self->user_agent->put( $uri->as_string, %$headers, Content => to_json($payload) );
+
+  $self->_log("PUT",  $uri->as_string);
+  $self->_log("HEAD", Dumper $headers);
+  $self->_log("DATA", Dumper $payload);
+  $self->_log("RESP", $response->content);
+
+  return $response->content ? from_json($response->content) : $response->is_success;
+}
+
 method next ($result) {
    return $self->get($result->{next}) if $result->{next};
 }
