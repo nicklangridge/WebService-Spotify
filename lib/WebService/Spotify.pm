@@ -46,6 +46,20 @@ method post ($method, $payload, %args) {
   return $response->content ? from_json($response->content) : undef;
 }
 
+method put ($method, $payload, %args) {
+  my $uri     = $self->_uri( $method, %args );
+  my $headers = $self->_auth_headers;
+  $headers->{'Content-Type'} = 'application/json';
+  my $response = $self->user_agent->put( $uri->as_string, %$headers, Content => to_json($payload) );
+
+  $self->_log("PUT",  $uri->as_string);
+  $self->_log("HEAD", Dumper $headers);
+  $self->_log("DATA", Dumper $payload);
+  $self->_log("RESP", $response->content);
+
+  return $response->content ? from_json($response->content) : $response->is_success;
+}
+
 method next ($result) {
    return $self->get($result->{next}) if $result->{next};
 }
@@ -128,6 +142,10 @@ method user_playlist_add_tracks ($user_id, $playlist_id, $tracks, :$position) {
   my %options;
   $options{position} = $position if $position;
   return $self->post("users/$user_id/playlists/$playlist_id/tracks", $tracks, %options);
+}
+
+method user_playlist_replace_tracks ($user_id, $playlist_id, $tracks) {
+  return $self->put("users/$user_id/playlists/$playlist_id/tracks", { 'uris' => $tracks });
 }
 
 method me {
