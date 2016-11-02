@@ -130,7 +130,7 @@ method user_playlists ($user_id) {
 
 method user_playlist ($user_id, :$playlist_id, :$fields) {
   my $method = $playlist_id ? "playlists/$playlist_id" : "starred";
-  return $self->get("users/$user_id/$method", $fields => $fields);
+  return $self->get("users/$user_id/$method", fields => $fields);
 }
 
 method user_playlist_create ($user_id, $name, :$public = 1) {
