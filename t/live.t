@@ -18,6 +18,8 @@ BEGIN {
 
 my $spotify = new_ok 'WebService::Spotify';
 
+$spotify->trace(1) if $ARGV[0] =~ /^-t|--trace$/;
+
 # artists
 
 {
@@ -94,7 +96,7 @@ my $spotify = new_ok 'WebService::Spotify';
   ok $result->{albums}->{items}->[0]->{name} =~ /^Pinkerton/, 'found album Pinkerton';
 }
 {
-  my $result = $spotify->search('weezer pinkerton', type => 'track');
+  my $result = $spotify->search('el scorcho', type => 'track');
   isa_ok $result->{tracks}, 'HASH';
   isa_ok $result->{tracks}->{items}, 'ARRAY';
   is $result->{tracks}->{items}->[0]->{name}, 'El Scorcho', 'found track El Scorcho';
