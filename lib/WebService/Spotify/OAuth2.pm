@@ -54,7 +54,7 @@ method save_token_info ($token_info) {
 }
 
 method is_token_expired ($token_info) {
-  return $token_info and $token_info->{expires_at} ? ($token_info->{expires_at} < time) : 0;
+  return ($token_info and $token_info->{expires_at} ? ($token_info->{expires_at} < time) : 0);
 }
 
 method get_authorize_url {
